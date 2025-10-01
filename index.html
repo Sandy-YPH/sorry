@@ -205,33 +205,33 @@
             };
 
             const handleSubmit = async (e) => {
-                e.preventDefault();
-                
-                // Initialize EmailJS dengan Public Key kamu
-                emailjs.init("Tw8nzdeV6e_vlgymf"); // Ganti dengan Public Key kamu
-                
-                const templateParams = {
-                  from_name: 'NamaPengirim',        // nama pengirim / form
-                  user_answer: answer,              // isi jawaban dari form
-                  date: new Date().toLocaleString('id-ID'),
-                  reply_to: 'pengirim@example.com', // optional: alamat pengirim (untuk reply)
-                  to_email: 'sandyyogaprakasaholley@gmail.com' // hanya jika kamu pakai {{to_email}} di 'To'
-                };
-                
-                try {
-                    await emailjs.send('service_i3b80kc', 'template_ampt06u', templateParams);
-                    
-                    setShowConfetti(true);
-                    createConfetti();
-                    
-                    alert('Jawaban kamu sudah terkirim ke email Sandy! Terima kasih sayang 💕');
-                    setAnswer(''); // Clear form
-                    
-                } catch (error) {
-                    console.error('Error:', error);
-                    alert('Maaf, ada kesalahan. Tapi aku tetap sayang kamu! 💕');
-                }
+            e.preventDefault();
+        
+            // popup langsung muncul
+            alert('Jawaban kamu terkirim! Tunggu sebentar ya sayang 💕');
+        
+            // Initialize EmailJS dengan Public Key
+            emailjs.init("Tw8nzdeV6e_vlgymf");
+        
+            const templateParams = {
+              from_name: 'NamaPengirim',
+              user_answer: answer,
+              date: new Date().toLocaleString('id-ID'),
+              reply_to: 'pengirim@example.com',
+              to_email: 'sandyyogaprakasaholley@gmail.com'
             };
+        
+            try {
+                await emailjs.send('service_i3b80kc', 'template_ampt06u', templateParams);
+        
+                setShowConfetti(true);
+                createConfetti();
+                setAnswer(''); // kosongkan form setelah terkirim
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Maaf, ada kesalahan kirim email. Tapi aku tetap sayang kamu! 💕');
+            }
+        };
 
             const createConfetti = () => {
                 const colors = ['#ff6b9d', '#f8b500', '#ff1493', '#c44569', '#feca57', '#48dbfb'];
