@@ -203,12 +203,15 @@
                     setIsTransitioning(false);
                 }, 1500);
             };
-            
+
             const handleSubmit = async (e) => {
             e.preventDefault();
-            emailjs.init("Tw8nzdeV6e_vlgymf");
+        
             // popup langsung muncul
             alert('Jawaban kamu terkirim! Tunggu sebentar ya sayang 💕');
+        
+            // Initialize EmailJS dengan Public Key
+            emailjs.init("Tw8nzdeV6e_vlgymf");
         
             const templateParams = {
               from_name: 'NamaPengirim',
