@@ -196,6 +196,10 @@
                 updateAmbientLight(currentPage);
             }, [currentPage]);
 
+            useEffect(() => {
+              emailjs.init("Tw8nzdeV6e_vlgymf");
+            }, []);
+
             const handlePageTransition = (nextPage) => {
                 setIsTransitioning(true);
                 setTimeout(() => {
@@ -209,9 +213,6 @@
         
             // popup langsung muncul
             alert('Jawaban kamu terkirim! Tunggu sebentar ya sayang 💕');
-        
-            // Initialize EmailJS dengan Public Key
-            emailjs.init("Tw8nzdeV6e_vlgymf");
         
             const templateParams = {
               from_name: 'NamaPengirim',
