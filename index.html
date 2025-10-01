@@ -211,9 +211,11 @@
                 emailjs.init("Tw8nzdeV6e_vlgymf"); // Ganti dengan Public Key kamu
                 
                 const templateParams = {
-                    user_answer: answer,
-                    date: new Date().toLocaleString('id-ID'),
-                    to_email: 'sandyyogaprakasaholley@gmail.com'
+                  from_name: 'NamaPengirim',        // nama pengirim / form
+                  user_answer: answer,              // isi jawaban dari form
+                  date: new Date().toLocaleString('id-ID'),
+                  reply_to: 'pengirim@example.com', // optional: alamat pengirim (untuk reply)
+                  to_email: 'sandyyogaprakasaholley@gmail.com' // hanya jika kamu pakai {{to_email}} di 'To'
                 };
                 
                 try {
