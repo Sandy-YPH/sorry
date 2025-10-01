@@ -196,10 +196,6 @@
                 updateAmbientLight(currentPage);
             }, [currentPage]);
 
-            useEffect(() => {
-              emailjs.init("Tw8nzdeV6e_vlgymf");
-            }, []);
-
             const handlePageTransition = (nextPage) => {
                 setIsTransitioning(true);
                 setTimeout(() => {
@@ -208,6 +204,10 @@
                 }, 1500);
             };
 
+            useEffect(() => {
+              emailjs.init("Tw8nzdeV6e_vlgymf");
+            }, []);
+            
             const handleSubmit = async (e) => {
             e.preventDefault();
         
