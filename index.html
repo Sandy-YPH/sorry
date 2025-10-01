@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maafin Aku Sayang</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.emailjs.com/sdk/3.2.0/email.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700;800;900&family=Playfair+Display:wght@400;500;600;700&display=swap');
+        
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        
+        #root {
+            width: 100vw;
+            height: 100vh;
+        }
+        
+        .page-container {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            transition: all 2s cubic-bezier(0.4, 0, 0.2, 1);
+            /* REMOVED BACKGROUND BLUR */
+        }
+        
+        .fade-in {
+            animation: grandEntrance 2.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .fade-out {
+            opacity: 0;
+            transform: scale(0.95);
+            transition: all 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        @keyframes grandEntrance {
+            from { 
+                opacity: 0; 
+                transform: translateY(50px) scale(0.9);
+                filter: blur(10px);
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0) scale(1);
+                filter: blur(0);
+            }
+        }
+        
+        .text-glow {
+            text-shadow: 0 0 40px rgba(255, 255, 255, 0.8), 0 0 80px rgba(255, 255, 255, 0.4);
+        }
+        
+        .text-3d {
+            text-shadow: 
+                0 0 40px rgba(255, 255, 255, 0.8),
+                0 4px 8px rgba(0,0,0,0.3),
+                0 8px 16px rgba(0,0,0,0.2);
+        }
+        
+        .button-grandeur {
+            background: linear-gradient(135deg, #ff6b9d 0%, #c44569 50%, #f8b500 100%);
+            box-shadow: 
+                0 0 60px rgba(255, 107, 157, 0.8),
+                0 20px 40px rgba(0,0,0,0.3),
+                inset 0 1px 0 rgba(255,255,255,0.3);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .button-grandeur::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            transition: left 0.5s;
+        }
+        
+        .button-grandeur:hover::before {
+            left: 100%;
+        }
+        
+        .button-grandeur:hover {
+            transform: scale(1.1) translateY(-5px);
+            box-shadow: 
+                0 0 80px rgba(255, 107, 157, 1),
+                0 30px 60px rgba(0,0,0,0.4),
+                inset 0 1px 0 rgba(255,255,255,0.5);
+        }
+        
+        .input-grandeur {
+            background: rgba(255, 255, 255, 0.15);
+            /* REMOVED BACKDROP FILTER */
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .input-grandeur:focus {
+            background: rgba(255, 255, 255, 0.25);
+            border-color: rgba(255, 107, 157, 0.8);
+            box-shadow: 
+                0 0 40px rgba(255, 107, 157, 0.6),
+                0 8px 32px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
+        }
+        
+        #three-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1;
+            transition: filter 2s ease;
+        }
+        
+        .confetti {
+            position: absolute;
+            width: 15px;
+            height: 15px;
+            animation: confetti-fall 4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+            filter: drop-shadow(0 0 10px currentColor);
+        }
+        
+        @keyframes confetti-fall {
+            0% {
+                transform: translateY(-100vh) rotate(0deg) scale(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            100% {
+                transform: translateY(100vh) rotate(1080deg) scale(0.5);
+                opacity: 0;
+            }
+        }
+        
+        .ambient-light {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 2;
+            transition: all 2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <canvas id="three-canvas"></canvas>
+    <div id="ambient-light" class="ambient-light"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        function App() {
+            const [currentPage, setCurrentPage] = useState(1);
+            const [isTransitioning, setIsTransitioning] = useState(false);
+            const [answer, setAnswer] = useState('');
+            const [showConfetti, setShowConfetti] = useState(false);
+
+            useEffect(() => {
+                initThreeJS();
+            }, []);
+
+            useEffect(() => {
+                updateThreeJSScene(currentPage);
+                updateAmbientLight(currentPage);
+            }, [currentPage]);
+
+            const handlePageTransition = (nextPage) => {
+                setIsTransitioning(true);
+                setTimeout(() => {
+                    setCurrentPage(nextPage);
+                    setIsTransitioning(false);
+                }, 1500);
+            };
+
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                
+                // Initialize EmailJS dengan Public Key kamu
+                emailjs.init("W4mQvcbG3pPk1wuDE"); // Ganti dengan Public Key kamu
+                
+                const templateParams = {
+                    user_answer: answer,
+                    date: new Date().toLocaleString('id-ID'),
+                    to_email: 'sandyyogaprakasaholley@gmail.com'
+                };
+                
+                try {
+                    await emailjs.send('service_i3b80kc', 'template_vaq3num', templateParams);
+                    
+                    setShowConfetti(true);
+                    createConfetti();
+                    
+                    alert('Jawaban kamu sudah terkirim ke email Sandy! Terima kasih sayang 💕');
+                    setAnswer(''); // Clear form
+                    
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Maaf, ada kesalahan. Tapi aku tetap sayang kamu! 💕');
+                }
+            };
+
+            const createConfetti = () => {
+                const colors = ['#ff6b9d', '#f8b500', '#ff1493', '#c44569', '#feca57', '#48dbfb'];
+                for (let i = 0; i < 150; i++) {
+                    setTimeout(() => {
+                        const confetti = document.createElement('div');
+                        confetti.className = 'confetti';
+                        confetti.style.left = Math.random() * 100 + '%';
+                        confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                        confetti.style.animationDelay = Math.random() * 2 + 's';
+                        confetti.style.animationDuration = (3 + Math.random() * 2) + 's';
+                        document.body.appendChild(confetti);
+                        
+                        setTimeout(() => confetti.remove(), 5000);
+                    }, i * 20);
+                }
+            };
+
+            return (
+                <>
+                    {currentPage === 1 && (
+                        <div className={`page-container ${isTransitioning ? 'fade-out' : 'fade-in'}`}>
+                            <div className="text-center px-8 max-w-4xl">
+                                <h1 className="text-5xl md:text-7xl font-light text-white mb-12 text-3d" style={{fontFamily: 'Playfair Display', fontWeight: 400}}>
+                                    Aku minta maaf karena aku matiin telepon waktu kita callan.
+                                    <br />
+                                    <span className="font-medium text-6xl md:text-8xl">Aku salah banget.</span>
+                                </h1>
+                                <p className="text-2xl text-gray-200 mb-16 font-light tracking-wide">Mau kan maafin aku?</p>
+                                <button 
+                                    onClick={() => handlePageTransition(2)}
+                                    className="button-grandeur text-white px-16 py-6 rounded-full text-2xl font-medium"
+                                >
+                                    Ya, aku maafin
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {currentPage === 2 && (
+                        <div className={`page-container ${isTransitioning ? 'fade-out' : 'fade-in'}`}>
+                            <div className="text-center px-8 max-w-4xl">
+                                <h1 className="text-5xl md:text-7xl font-light text-white mb-12 text-3d" style={{fontFamily: 'Playfair Display', fontWeight: 400}}>
+                                    Aku janji nggak akan ngulangin lagi kesalahan ini.
+                                </h1>
+                                <p className="text-2xl text-gray-200 mb-16 font-light tracking-wide">Maafin aku ya?</p>
+                                <button 
+                                    onClick={() => handlePageTransition(3)}
+                                    className="button-grandeur text-white px-16 py-6 rounded-full text-2xl font-medium"
+                                >
+                                    Tentu sayang
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {currentPage === 3 && (
+                        <div className={`page-container ${isTransitioning ? 'fade-out' : 'fade-in'}`}>
+                            <div className="text-center px-8 max-w-4xl">
+                                <h1 className="text-5xl md:text-7xl font-light text-white mb-12 text-3d" style={{fontFamily: 'Playfair Display', fontWeight: 400}}>
+                                    Aku bakal jadi orang yang lebih baik buat kamu.
+                                </h1>
+                                <form onSubmit={handleSubmit} className="mt-16">
+                                    <p className="text-2xl text-gray-200 mb-8 font-light tracking-wide">Bener kan kamu mau maafin aku?</p>
+                                    <input
+                                        type="text"
+                                        value={answer}
+                                        onChange={(e) => setAnswer(e.target.value)}
+                                        placeholder="Tulis jawabanmu di sini..."
+                                        className="input-grandeur w-full max-w-lg px-8 py-6 rounded-full text-white placeholder-gray-300 text-center text-xl font-light focus:outline-none"
+                                        required
+                                    />
+                                    <button 
+                                        type="submit"
+                                        className="button-grandeur text-white px-16 py-6 rounded-full text-2xl font-medium mt-8"
+                                    >
+                                        Kirim Jawaban 💕
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    )}
+                </>
+            );
+        }
+
+        // Three.js Scene with dynamic weather
+        let scene, camera, renderer, hill, rainParticles, sun, ambientLight, directionalLight;
+        let rainIntensity = 2000;
+        let isRaining = true;
+        let lightningTimer = 0;
+
+        function initThreeJS() {
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+            renderer = new THREE.WebGLRenderer({ 
+                canvas: document.getElementById('three-canvas'),
+                alpha: true,
+                antialias: true
+            });
+            
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 0.8;
+
+            // Create detailed hill with multiple layers
+            const hillGeometry1 = new THREE.ConeGeometry(25, 20, 64);
+            const hillGeometry2 = new THREE.ConeGeometry(20, 15, 64);
+            const hillGeometry3 = new THREE.ConeGeometry(15, 10, 64);
+            
+            const hillMaterial1 = new THREE.MeshStandardMaterial({ 
+                color: 0x1a1a2e,
+                roughness: 0.8,
+                metalness: 0.2
+            });
+            const hillMaterial2 = new THREE.MeshStandardMaterial({ 
+                color: 0x16213e,
+                roughness: 0.7,
+                metalness: 0.3
+            });
+            const hillMaterial3 = new THREE.MeshStandardMaterial({ 
+                color: 0x0f3460,
+                roughness: 0.6,
+                metalness: 0.4
+            });
+
+            const hill1 = new THREE.Mesh(hillGeometry1, hillMaterial1);
+            const hill2 = new THREE.Mesh(hillGeometry2, hillMaterial2);
+            const hill3 = new THREE.Mesh(hillGeometry3, hillMaterial3);
+            
+            hill1.position.set(0, -8, 0);
+            hill2.position.set(15, -5, -10);
+            hill3.position.set(-10, -3, -5);
+            
+            scene.add(hill1, hill2, hill3);
+
+            // Create rain particles with varied sizes
+            createRainParticles();
+
+            // Enhanced lighting system
+            ambientLight = new THREE.AmbientLight(0x404040, 0.1);
+            scene.add(ambientLight);
+
+            directionalLight = new THREE.DirectionalLight(0xffffff, 0.3);
+            directionalLight.position.set(10, 20, 5);
+            directionalLight.castShadow = true;
+            directionalLight.shadow.mapSize.width = 2048;
+            directionalLight.shadow.mapSize.height = 2048;
+            scene.add(directionalLight);
+
+            // Position camera for grandeur view
+            camera.position.set(0, 10, 40);
+            camera.lookAt(0, 0, 0);
+
+            animate();
+        }
+
+        function createRainParticles() {
+            if (rainParticles) scene.remove(rainParticles);
+            
+            const rainGeometry = new THREE.BufferGeometry();
+            const rainCount = rainIntensity;
+            const positions = new Float32Array(rainCount * 3);
+            const velocities = new Float32Array(rainCount);
+
+            for (let i = 0; i < rainCount; i++) {
+                positions[i * 3] = (Math.random() - 0.5) * 150;
+                positions[i * 3 + 1] = Math.random() * 80;
+                positions[i * 3 + 2] = (Math.random() - 0.5) * 150;
+                velocities[i] = 0.5 + Math.random() * 1.5;
+            }
+
+            rainGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            rainGeometry.setAttribute('velocity', new THREE.BufferAttribute(velocities, 1));
+            
+            const rainMaterial = new THREE.PointsMaterial({
+                color: 0x88ccff,
+                size: 2,
+                transparent: true,
+                opacity: 0.7,
+                blending: THREE.AdditiveBlending
+            });
+
+            rainParticles = new THREE.Points(rainGeometry, rainMaterial);
+            scene.add(rainParticles);
+        }
+
+        function updateThreeJSScene(page) {
+            if (page === 1) {
+                // Dark stormy night
+                scene.fog = new THREE.Fog(0x0a0a0a, 10, 150);
+                rainIntensity = 2000;
+                createRainParticles();
+                
+                directionalLight.intensity = 0.2;
+                ambientLight.intensity = 0.05;
+                
+                if (sun) {
+                    scene.remove(sun);
+                    sun = null;
+                }
+                
+                // Add lightning effect
+                lightningTimer = setInterval(() => {
+                    directionalLight.intensity = 2;
+                    setTimeout(() => {
+                        directionalLight.intensity = 0.2;
+                    }, 100);
+                }, 3000 + Math.random() * 5000);
+                
+            } else if (page === 2) {
+                // Dawn breaking, rain lessening
+                clearInterval(lightningTimer);
+                scene.fog = new THREE.Fog(0x4a5568, 20, 200);
+                rainIntensity = 500;
+                createRainParticles();
+                
+                directionalLight.intensity = 0.6;
+                ambientLight.intensity = 0.3;
+                directionalLight.color.setHex(0xffd700);
+                
+                // Add subtle sun glow
+                if (!sun) {
+                    const sunGeometry = new THREE.SphereGeometry(2, 32, 32);
+                    const sunMaterial = new THREE.MeshBasicMaterial({ 
+                        color: 0xffd700,
+                        emissive: 0xffd700,
+                        emissiveIntensity: 0.8,
+                        transparent: true,
+                        opacity: 0.6
+                    });
+                    sun = new THREE.Mesh(sunGeometry, sunMaterial);
+                    sun.position.set(-30, 10, -50);
+                    scene.add(sun);
+                }
+                
+            } else if (page === 3) {
+                // Bright sunny day
+                clearInterval(lightningTimer);
+                scene.fog = new THREE.Fog(0x87ceeb, 30, 250);
+                rainIntensity = 0;
+                createRainParticles();
+                
+                directionalLight.intensity = 1.2;
+                ambientLight.intensity = 0.8;
+                directionalLight.color.setHex(0xffffff);
+                
+                // Bright sun
+                if (sun) {
+                    scene.remove(sun);
+                }
+                const sunGeometry = new THREE.SphereGeometry(4, 32, 32);
+                const sunMaterial = new THREE.MeshBasicMaterial({ 
+                    color: 0xffff00,
+                    emissive: 0xffff00,
+                    emissiveIntensity: 1.5
+                });
+                sun = new THREE.Mesh(sunGeometry, sunMaterial);
+                sun.position.set(20, 25, -30);
+                scene.add(sun);
+                
+                // Add sun rays
+                const rayGeometry = new THREE.ConeGeometry(0.5, 20, 4);
+                const rayMaterial = new THREE.MeshBasicMaterial({
+                    color: 0xffff00,
+                    transparent: true,
+                    opacity: 0.3
+                });
+                
+                for (let i = 0; i < 8; i++) {
+                    const ray = new THREE.Mesh(rayGeometry, rayMaterial);
+                    ray.position.set(
+                        20 + Math.cos(i * Math.PI / 4) * 8,
+                        25 + Math.sin(i * Math.PI / 4) * 8,
+                        -30
+                    );
+                    ray.lookAt(sun.position);
+                    scene.add(ray);
+                }
+            }
+        }
+
+        function updateAmbientLight(page) {
+            const ambientLightDiv = document.getElementById('ambient-light');
+            if (page === 1) {
+                ambientLightDiv.style.background = 'radial-gradient(circle at center, rgba(138, 43, 226, 0.1) 0%, rgba(0, 0, 0, 0.4) 100%)';
+            } else if (page === 2) {
+                ambientLightDiv.style.background = 'radial-gradient(circle at 30% 20%, rgba(255, 215, 0, 0.2) 0%, rgba(255, 140, 0, 0.1) 50%, rgba(0, 0, 0, 0.2) 100%)';
+            } else if (page === 3) {
+                ambientLightDiv.style.background = 'radial-gradient(circle at 70% 30%, rgba(255, 255, 0, 0.3) 0%, rgba(135, 206, 235, 0.2) 70%, rgba(0, 0, 0, 0.1) 100%)';
+            }
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            const time = Date.now() * 0.001;
+
+            // Animate rain with wind effect
+            if (rainParticles && rainIntensity > 0) {
+                const positions = rainParticles.geometry.attributes.position.array;
+                const velocities = rainParticles.geometry.attributes.velocity.array;
+                
+                for (let i = 0; i < positions.length; i += 3) {
+                    positions[i] += Math.sin(time + i) * 0.1; // Wind effect
+                    positions[i + 1] -= velocities[i / 3];
+                    positions[i + 2] += Math.cos(time + i) * 0.05;
+                    
+                    if (positions[i + 1] < -20) {
+                        positions[i + 1] = 80;
+                        positions[i] = (Math.random() - 0.5) * 150;
+                        positions[i + 2] = (Math.random() - 0.5) * 150;
+                    }
+                }
+                rainParticles.geometry.attributes.position.needsUpdate = true;
+            }
+
+            // Animate sun
+            if (sun) {
+                sun.rotation.y += 0.02;
+                sun.position.y += Math.sin(time * 0.5) * 0.1;
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
