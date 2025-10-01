@@ -188,10 +188,6 @@
             const [showConfetti, setShowConfetti] = useState(false);
 
             useEffect(() => {
-              emailjs.init("Tw8nzdeV6e_vlgymf");
-            }, []);
-
-            useEffect(() => {
                 initThreeJS();
             }, []);
 
@@ -199,6 +195,10 @@
                 updateThreeJSScene(currentPage);
                 updateAmbientLight(currentPage);
             }, [currentPage]);
+
+            useEffect(() => {
+              emailjs.init("Tw8nzdeV6e_vlgymf");
+            }, []);
 
             const handlePageTransition = (nextPage) => {
                 setIsTransitioning(true);
